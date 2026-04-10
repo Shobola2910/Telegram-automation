@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELD Monitor — Algo Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════
+   LIQUID GLASS — iOS-inspired Design System
+══════════════════════════════════════════════════════ */
+:root {
+  --bg: #0a0f1e;
+  --bg2: #0d1426;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-hover: rgba(255,255,255,0.10);
+  --glass-strong: rgba(255,255,255,0.14);
+  --accent: #30d158;
+  --accent2: #0a84ff;
+  --accent3: #ff453a;
+  --accent4: #ffd60a;
+  --accent5: #bf5af2;
+  --text: rgba(255,255,255,0.95);
+  --text2: rgba(255,255,255,0.60);
+  --text3: rgba(255,255,255,0.35);
+  --blur: blur(20px) saturate(180%);
+  --blur-strong: blur(40px) saturate(200%);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-lg: 28px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 40px rgba(48,209,88,0.15);
+  --transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Background mesh ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(48,209,88,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(10,132,255,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(191,90,242,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Animated orbs ── */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  animation: float 8s ease-in-out infinite;
+}
+.orb1 { width: 400px; height: 400px; background: #30d158; top: -100px; left: -100px; animation-delay: 0s; }
+.orb2 { width: 300px; height: 300px; background: #0a84ff; bottom: -80px; right: -80px; animation-delay: -3s; }
+.orb3 { width: 200px; height: 200px; background: #bf5af2; top: 40%; left: 40%; animation-delay: -5s; }
+
+@keyframes float {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,15px) scale(0.95); }
+}
+
+/* ── Layout ── */
+.app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: var(--blur);
+  border-right: 1px solid var(--glass-border);
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 8px;
+}
+
+.logo-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--accent), #00c44f);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 16px rgba(48,209,88,0.35);
+}
+
+.logo-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+.logo-text span { font-size: 11px; color: var(--text3); font-weight: 400; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 14px; font-weight: 500;
+  transition: var(--transition);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.nav-item:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+  border-color: var(--glass-border);
+}
+
+.nav-item.active {
+  background: rgba(48,209,88,0.12);
+  color: var(--accent);
+  border-color: rgba(48,209,88,0.25);
+}
+
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent3);
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  min-width: 20px; text-align: center;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.tg-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  font-size: 12px; color: var(--text2);
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent3);
+  animation: pulse-dot 2s infinite;
+}
+.status-dot.online { background: var(--accent); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── Main content ── */
+.main {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page header ── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-title h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.page-title p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+/* ── Glass card ── */
+.card {
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.card:hover { border-color: rgba(255,255,255,0.18); box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.05); }
+
+.card-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.card-header h3 { font-size: 15px; font-weight: 600; }
+.card-body { padding: 24px; }
+
+/* ── Stats grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+  cursor: default;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--stat-color, var(--accent));
+  border-radius: 2px 2px 0 0;
+}
+
+.stat-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); }
+
+.stat-icon { font-size: 24px; margin-bottom: 10px; }
+.stat-value { font-size: 32px; font-weight: 700; letter-spacing: -1px; color: var(--stat-color, var(--text)); }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; font-weight: 500; }
+
+/* ── Driver grid ── */
+.drivers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.driver-card {
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.driver-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: var(--shadow), 0 12px 40px rgba(0,0,0,0.3);
+}
+
+.driver-card::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 100px; height: 100px;
+  background: radial-gradient(circle, var(--dc, rgba(48,209,88,0.08)), transparent 70%);
+  pointer-events: none;
+}
+
+.driver-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px;
+}
+
+.driver-avatar {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--dc, #30d158), color-mix(in srgb, var(--dc, #30d158) 50%, #000));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.driver-info h4 { font-size: 15px; font-weight: 600; }
+.driver-info small { font-size: 11px; color: var(--text3); }
+
+.driver-status {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.status-D    { background: rgba(48,209,88,0.15);  color: var(--accent); border: 1px solid rgba(48,209,88,0.3); }
+.status-ON   { background: rgba(10,132,255,0.15); color: var(--accent2); border: 1px solid rgba(10,132,255,0.3); }
+.status-OFF  { background: rgba(255,255,255,0.06); color: var(--text3); border: 1px solid var(--glass-border); }
+.status-SB   { background: rgba(191,90,242,0.15); color: var(--accent5); border: 1px solid rgba(191,90,242,0.3); }
+
+.hos-bars { display: flex; flex-direction: column; gap: 8px; }
+
+.hos-bar-row {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.hos-label { font-size: 10px; color: var(--text3); font-weight: 600; letter-spacing: 0.5px; width: 40px; flex-shrink: 0; }
+.hos-val   { font-size: 11px; color: var(--text2); font-weight: 500; width: 38px; text-align: right; flex-shrink: 0; }
+
+.hos-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.hos-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, var(--bar-color, var(--accent)), color-mix(in srgb, var(--bar-color, var(--accent)) 70%, #fff));
+}
+
+.driver-alerts {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 14px;
+}
+
+.alert-pill {
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 10px; font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+}
+
+.pill-warn  { background: rgba(255,214,10,0.15); color: var(--accent4); border: 1px solid rgba(255,214,10,0.25); }
+.pill-danger { background: rgba(255,69,58,0.15); color: var(--accent3); border: 1px solid rgba(255,69,58,0.25); }
+.pill-info  { background: rgba(10,132,255,0.15); color: var(--accent2); border: 1px solid rgba(10,132,255,0.25); }
+
+/* ── Telegram group selector ── */
+.group-select-wrap {
+  position: relative;
+}
+
+.group-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  appearance: none;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.group-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(48,209,88,0.06);
+  box-shadow: 0 0 0 3px rgba(48,209,88,0.1);
+}
+
+.group-select option { background: #1a2340; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: var(--transition);
+  font-family: inherit;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 4px 16px rgba(48,209,88,0.35);
+}
+.btn-primary:hover {
+  background: #3ae066;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(48,209,88,0.45);
+}
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  background: var(--glass);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+}
+.btn-ghost:hover { background: var(--glass-hover); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+
+.btn-danger {
+  background: rgba(255,69,58,0.15);
+  color: var(--accent3);
+  border: 1px solid rgba(255,69,58,0.25);
+}
+.btn-danger:hover { background: rgba(255,69,58,0.25); }
+
+.btn-sm { padding: 7px 12px; font-size: 12px; }
+
+/* ── Input fields ── */
+.input-group { margin-bottom: 16px; }
+.input-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.3px; }
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.input::placeholder { color: var(--text3); }
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(48,209,88,0.05);
+  box-shadow: 0 0 0 3px rgba(48,209,88,0.1);
+}
+
+/* ── Alert log ── */
+.alert-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--glass-border);
+  transition: background 0.2s;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.alert-row:hover { background: rgba(255,255,255,0.03); }
+.alert-row:last-child { border-bottom: none; }
+
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.alert-content { flex: 1; }
+.alert-msg { font-size: 13px; line-height: 1.5; }
+.alert-meta { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+.alert-type-badge {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+.modal {
+  background: rgba(13,20,38,0.95);
+  backdrop-filter: var(--blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 90%; max-width: 480px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  animation: modalSlide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlide {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* ── Toggle switch ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  border: 1px solid var(--glass-border);
+  cursor: pointer; transition: 0.3s;
+}
+.toggle input:checked + .toggle-track {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(48,209,88,0.4);
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.toggle input:checked + .toggle-track::after { left: 22px; }
+
+/* ── ELD Source cards ── */
+.eld-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex; align-items: center; gap: 16px;
+  transition: var(--transition);
+}
+.eld-card:hover { border-color: rgba(255,255,255,0.2); }
+.eld-logo { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #1a3a6e, #0a84ff); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; }
+.eld-info { flex: 1; }
+.eld-info h4 { font-size: 15px; font-weight: 600; }
+.eld-info small { font-size: 12px; color: var(--text3); }
+
+/* ── Search ── */
+.search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+.search-wrap .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text3); pointer-events: none; }
+.search-input {
+  width: 100%; padding: 11px 16px 11px 40px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit; font-size: 14px;
+  transition: var(--transition);
+}
+.search-input:focus { outline: none; border-color: var(--accent); background: rgba(48,209,88,0.05); }
+.search-input::placeholder { color: var(--text3); }
+
+/* ── Toast notification ── */
+.toast-wrap {
+  position: fixed; bottom: 32px; right: 32px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+
+.toast {
+  padding: 12px 18px;
+  background: rgba(13,20,38,0.95);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 260px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(60px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.toast.success { border-color: rgba(48,209,88,0.3); }
+.toast.error   { border-color: rgba(255,69,58,0.3); }
+.toast.info    { border-color: rgba(10,132,255,0.3); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 11px; color: var(--text3); font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+tr:last-child td { border-bottom: none; }
+
+/* ── Spinner ── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; padding: 40px;
+  color: var(--text2); font-size: 13px;
+}
+
+/* ── Empty state ── */
+.empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--text3);
+}
+.empty .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty p { font-size: 14px; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { padding: 20px 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── Telegram auth wizard ─── */
+.auth-wizard {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 20px; text-align: center;
+  gap: 20px;
+}
+.auth-wizard .tg-logo { font-size: 64px; margin-bottom: 8px; }
+.auth-wizard h2 { font-size: 22px; font-weight: 700; }
+.auth-wizard p { font-size: 14px; color: var(--text2); max-width: 320px; }
+.auth-step { width: 100%; max-width: 340px; }
+
+/* ─── Vibration animation for alerts ─── */
+.vibrate {
+  animation: vibrate 0.4s ease;
+}
+@keyframes vibrate {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-4px) rotate(-1deg); }
+  40% { transform: translateX(4px) rotate(1deg); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🚛</div>
+      <div class="logo-text">
+        <h2>ELD Monitor</h2>
+        <span>Algo Group LLC</span>
+      </div>
+    </div>
+
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('drivers')">
+      <span class="nav-icon">👤</span> Drivers
+    </div>
+    <div class="nav-item" onclick="showPage('alerts')">
+      <span class="nav-icon">🔔</span> Alerts
+      <span class="nav-badge" id="alertBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('eld-sources')">
+      <span class="nav-icon">📡</span> ELD Sources
+    </div>
+    <div class="nav-item" onclick="showPage('telegram')">
+      <span class="nav-icon">✈️</span> Telegram
+    </div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="tg-status" id="tgStatus">
+        <div class="status-dot" id="tgDot"></div>
+        <span id="tgStatusText">Telegram tekshirilmoqda...</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Dashboard</h1>
+          <p id="lastUpdated">Yangilanmoqda...</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="refreshAll()">🔄 Yangilash</button>
+          <button class="btn btn-primary" onclick="triggerMonitor()">▶ Monitor</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card" style="--stat-color:var(--accent)">
+          <div class="stat-icon">👤</div>
+          <div class="stat-value" id="statDrivers">–</div>
+          <div class="stat-label">Jami Drivers</div>
+        </div>
+        <div class="stat-card" style="--stat-color:var(--accent3)">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="statAlerts">–</div>
+          <div class="stat-label">Bugungi Alertlar</div>
+        </div>
+        <div class="stat-card" style="--stat-color:var(--accent2)">
+          <div class="stat-icon">📡</div>
+          <div class="stat-value" id="statEld">–</div>
+          <div class="stat-label">ELD Manbalar</div>
+        </div>
+        <div class="stat-card" style="--stat-color:var(--accent5)">
+          <div class="stat-icon">✈️</div>
+          <div class="stat-value" id="statTg">–</div>
+          <div class="stat-label">Telegram Guruhlar</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>🚗 Driver HOS Holati</h3>
+          <div style="display:flex;gap:8px">
+            <span class="status-D">Drive</span>
+            <span class="status-ON">OnDuty</span>
+            <span class="status-OFF">Off</span>
+            <span class="status-SB">Sleep</span>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div id="driversGrid" style="padding:20px">
+            <div class="loading-wrap"><div class="spinner"></div> Drivers yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DRIVERS ══ -->
+    <div class="page" id="page-drivers">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Drivers</h1>
+          <p>ELD ↔ Telegram group mapping</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="openSyncModal()">🔄 ELD dan Sync</button>
+          <button class="btn btn-primary" onclick="openAddDriverModal()">+ Driver qo'shish</button>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="driverSearch" placeholder="Driver qidirish..." oninput="filterDrivers()">
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table id="driversTable">
+            <thead>
+              <tr>
+                <th>DRIVER</th>
+                <th>ELD ID</th>
+                <th>MANBA</th>
+                <th>TELEGRAM GURUH</th>
+                <th>HOLAT</th>
+                <th>AMALLAR</th>
+              </tr>
+            </thead>
+            <tbody id="driversTableBody">
+              <tr><td colspan="6"><div class="loading-wrap"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTS ══ -->
+    <div class="page" id="page-alerts">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Alert Tarixi</h1>
+          <p>Yuborilgan barcha ogohlantirishlar</p>
+        </div>
+        <button class="btn btn-ghost" onclick="loadAlerts()">🔄 Yangilash</button>
+      </div>
+
+      <div class="stats-grid" id="alertStatsGrid" style="margin-bottom:20px">
+      </div>
+
+      <div class="card" style="overflow:hidden">
+        <div id="alertsList">
+          <div class="loading-wrap"><div class="spinner"></div> Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ELD SOURCES ══ -->
+    <div class="page" id="page-eld-sources">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>ELD Manbalar</h1>
+          <p>Factor, Leader va boshqa ELD APIlar</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddEldModal()">+ ELD qo'shish</button>
+      </div>
+
+      <div id="eldSourcesList" style="display:flex;flex-direction:column;gap:12px">
+        <div class="loading-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ══ TELEGRAM ══ -->
+    <div class="page" id="page-telegram">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Telegram</h1>
+          <p>Akkauntni ulash va guruhlarni boshqarish</p>
+        </div>
+        <button class="btn btn-ghost" onclick="syncTgGroups()">🔄 Guruhlarni yangilash</button>
+      </div>
+
+      <div id="tgContent">
+        <div class="loading-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Sozlamalar</h1>
+          <p>Monitor va alert sozlamalari</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-header"><h3>⏱ Monitor Interval</h3></div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>Polling interval (soniya)</label>
+              <input class="input" id="pollInterval" type="number" value="300" min="60">
+            </div>
+            <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Minimum 60 soniya. ELD API rate limit uchun 300s tavsiya.</p>
+            <button class="btn btn-primary btn-sm">Saqlash</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>⚠️ Alert Chegaralari</h3></div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>Cycle vaqt ogohlantirish (soat)</label>
+              <input class="input" type="number" value="20" step="0.5">
+            </div>
+            <div class="input-group">
+              <label>Drive/Break/Shift ogohlantirish (soat)</label>
+              <input class="input" type="number" value="2" step="0.5">
+            </div>
+            <div class="input-group">
+              <label>Alert Cooldown (daqiqa)</label>
+              <input class="input" type="number" value="90">
+            </div>
+            <button class="btn btn-primary btn-sm">Saqlash</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📤 Test Xabar</h3></div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>Chat ID</label>
+              <input class="input" id="testChatId" placeholder="-1001234567890">
+            </div>
+            <div class="input-group">
+              <label>Xabar</label>
+              <input class="input" id="testMsg" placeholder="Test xabari...">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="sendTestMsg()">✈️ Yuborish</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🔧 Tizim</h3></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <span style="font-size:13px">Monitor faol</span>
+              </div>
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <span style="font-size:13px">Disconnect alertlar</span>
+              </div>
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <span style="font-size:13px">Hujjat alertlari</span>
+              </div>
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <span style="font-size:13px">Vaqt alertlari</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="addDriverModal">
+  <div class="modal">
+    <h3>👤 Driver Qo'shish</h3>
+    <div class="input-group">
+      <label>ELD Driver ID *</label>
+      <input class="input" id="newEldId" placeholder="ELD dan driver ID">
+    </div>
+    <div class="input-group">
+      <label>Driver Ismi *</label>
+      <input class="input" id="newDriverName" placeholder="John Smith">
+    </div>
+    <div class="input-group">
+      <label>Email</label>
+      <input class="input" id="newDriverEmail" placeholder="driver@company.com" type="email">
+    </div>
+    <div class="input-group">
+      <label>ELD Manba</label>
+      <select class="input" id="newEldSource">
+        <option value="factor">Factor ELD</option>
+        <option value="leader">Leader ELD</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Telegram Guruh (optional)</label>
+      <select class="input group-select" id="newTgGroup">
+        <option value="">— Guruh tanlanmagan —</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addDriverModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="addDriver()">Qo'shish</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editDriverModal">
+  <div class="modal">
+    <h3>✏️ Driver Tahrirlash</h3>
+    <input type="hidden" id="editDriverId">
+    <div class="input-group">
+      <label>Driver Ismi</label>
+      <input class="input" id="editDriverName">
+    </div>
+    <div class="input-group">
+      <label>Telegram Guruh</label>
+      <select class="input group-select" id="editTgGroup">
+        <option value="">— Guruh tanlanmagan —</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('editDriverModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="saveDriverEdit()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addEldModal">
+  <div class="modal">
+    <h3>📡 ELD Manba Qo'shish</h3>
+    <div class="input-group">
+      <label>Nomi (slug) *</label>
+      <input class="input" id="eldName" placeholder="leader">
+    </div>
+    <div class="input-group">
+      <label>Ko'rsatiladigan nom *</label>
+      <input class="input" id="eldDisplayName" placeholder="Leader ELD">
+    </div>
+    <div class="input-group">
+      <label>Base URL *</label>
+      <input class="input" id="eldBaseUrl" placeholder="https://api.leadereld.com/api/v1">
+    </div>
+    <div class="input-group">
+      <label>Bearer Token *</label>
+      <input class="input" id="eldToken" placeholder="eyJ...">
+    </div>
+    <div class="input-group">
+      <label>Tenant ID</label>
+      <input class="input" id="eldTenantId" placeholder="optional">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addEldModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="addEldSource()">Qo'shish</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="syncModal">
+  <div class="modal">
+    <h3>🔄 ELD dan Sync</h3>
+    <div class="input-group">
+      <label>ELD Manba</label>
+      <select class="input" id="syncEldSource"></select>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:-8px">ELD dan barcha faol driverlar import qilinadi.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('syncModal')">Bekor</button>
+      <button class="btn btn-primary" onclick="syncDrivers()">Sync qilish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let allDrivers = [];
+let allGroups  = [];
+let allSources = [];
+let tgAuthorized = false;
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(item => {
+    if (item.textContent.trim().toLowerCase().includes(name.replace('-',' '))) {
+      item.classList.add('active');
+    }
+  });
+  if (name === 'drivers')     loadDrivers();
+  if (name === 'alerts')      { loadAlerts(); loadAlertStats(); }
+  if (name === 'eld-sources') loadEldSources();
+  if (name === 'telegram')    loadTelegramPage();
+  if (name === 'dashboard')   refreshAll();
+}
+
+// ── API helpers ────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (!res.ok) { const e = await res.json().catch(()=>({detail:res.statusText})); throw new Error(e.detail || res.statusText); }
+  return res.json();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── Modal helpers ──────────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── Telegram status ────────────────────────────────────────────────────────
+async function checkTgStatus() {
+  try {
+    const d = await api('GET', '/api/telegram/status');
+    tgAuthorized = d.authorized;
+    const dot  = document.getElementById('tgDot');
+    const text = document.getElementById('tgStatusText');
+    if (d.authorized) {
+      dot.classList.add('online');
+      text.textContent = 'Telegram ulanган';
+    } else {
+      dot.classList.remove('online');
+      text.textContent = 'Telegram ulanmagan';
+    }
+  } catch(e) { }
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+async function refreshAll() {
+  checkTgStatus();
+  await loadDashboardStats();
+  await loadDashboardDrivers();
+  document.getElementById('lastUpdated').textContent =
+    'Oxirgi yangilanish: ' + new Date().toLocaleTimeString('uz-UZ');
+}
+
+async function loadDashboardStats() {
+  try {
+    const [drivers, sources, alerts] = await Promise.all([
+      api('GET', '/api/drivers'),
+      api('GET', '/api/eld-sources'),
+      api('GET', '/api/monitor/alerts?limit=500'),
+    ]);
+    allDrivers = drivers;
+    allSources = sources;
+    document.getElementById('statDrivers').textContent = drivers.length;
+    document.getElementById('statEld').textContent = sources.length;
+    // today's alerts
+    const today = new Date().toDateString();
+    const todayAlerts = alerts.filter(a => new Date(a.sent_at).toDateString() === today);
+    document.getElementById('statAlerts').textContent = todayAlerts.length;
+    document.getElementById('alertBadge').textContent = todayAlerts.length;
+    // tg groups
+    try {
+      const groups = await api('GET', '/api/telegram/groups');
+      allGroups = groups;
+      document.getElementById('statTg').textContent = groups.length;
+    } catch(e) {
+      document.getElementById('statTg').textContent = '–';
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadDashboardDrivers() {
+  const grid = document.getElementById('driversGrid');
+  if (!allDrivers.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🚛</div><p>Hali driver yo\'q. Driver qo\'shing.</p></div>';
+    return;
+  }
+  grid.innerHTML = '<div class="drivers-grid">' +
+    allDrivers.map(d => driverCardHTML(d)).join('') + '</div>';
+}
+
+function driverCardHTML(d) {
+  const colors = ['#30d158','#0a84ff','#ffd60a','#ff453a','#bf5af2','#ff9f0a','#5ac8fa'];
+  const color = colors[Math.abs(hashCode(d.driver_name)) % colors.length];
+  const initials = d.driver_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const status = d.status || 'OFF';
+  const hasTg = d.telegram_chat_id;
+
+  return `<div class="driver-card" style="--dc:${color}">
+    <div class="driver-header">
+      <div class="driver-avatar" style="background:linear-gradient(135deg,${color},${color}99)">${initials}</div>
+      <div class="driver-info">
+        <h4>${d.driver_name}</h4>
+        <small>${d.eld_source?.toUpperCase()} · ${d.eld_driver_id?.slice(0,8)}...</small>
+      </div>
+      <span class="driver-status status-${status}">${status}</span>
+    </div>
+    <div class="hos-bars">
+      ${hosBar('CYCLE', d.cycle_remaining, 70, color)}
+      ${hosBar('DRIVE', d.drive_remaining, 11, color)}
+      ${hosBar('SHIFT', d.shift_remaining, 14, color)}
+      ${hosBar('BREAK', d.break_remaining, 8, color)}
+    </div>
+    <div class="driver-alerts">
+      ${hasTg ? `<span class="alert-pill pill-info">✈️ ${d.telegram_chat_title||'Guruh ulangan'}</span>` : '<span class="alert-pill pill-warn">⚠️ Guruh yo\'q</span>'}
+    </div>
+  </div>`;
+}
+
+function hosBar(label, val, max, color) {
+  if (val === undefined || val === null) val = 0;
+  const pct = Math.min(100, Math.max(0, (val / max) * 100));
+  const warn = pct < 20;
+  const barColor = warn ? '#ff453a' : color;
+  return `<div class="hos-bar-row">
+    <span class="hos-label">${label}</span>
+    <div class="hos-track"><div class="hos-fill" style="width:${pct}%;--bar-color:${barColor}"></div></div>
+    <span class="hos-val">${val.toFixed ? val.toFixed(1) : val}h</span>
+  </div>`;
+}
+
+function hashCode(str) {
+  let h = 0;
+  for (let c of str) h = (h * 31 + c.charCodeAt(0)) | 0;
+  return h;
+}
+
+// ── Trigger monitor ────────────────────────────────────────────────────────
+async function triggerMonitor() {
+  try {
+    await api('POST', '/api/monitor/run');
+    toast('Monitor ishga tushirildi!', 'success');
+    setTimeout(refreshAll, 3000);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Drivers table ─────────────────────────────────────────────────────────
+async function loadDrivers() {
+  try {
+    allDrivers = await api('GET', '/api/drivers');
+    renderDriversTable(allDrivers);
+    await loadGroupsForSelects();
+  } catch(e) { toast('Drivers yuklanmadi', 'error'); }
+}
+
+function renderDriversTable(drivers) {
+  const tbody = document.getElementById('driversTableBody');
+  if (!drivers.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">👤</div><p>Driver topilmadi</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = drivers.map(d => `
+    <tr>
+      <td><strong>${d.driver_name}</strong><br><small style="color:var(--text3)">${d.driver_email||''}</small></td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text3)">${d.eld_driver_id}</td>
+      <td><span class="alert-pill pill-info">${d.eld_source?.toUpperCase()}</span></td>
+      <td>${d.telegram_chat_id
+        ? `<span style="color:var(--accent);font-size:13px">✅ ${d.telegram_chat_title||d.telegram_chat_id}</span>`
+        : '<span style="color:var(--text3);font-size:12px">—</span>'}</td>
+      <td><span class="alert-pill ${d.is_active ? 'pill-info' : 'pill-warn'}">${d.is_active ? 'Faol' : 'Nofaol'}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openEditDriver(${d.id}, '${d.driver_name}', '${d.telegram_chat_id||''}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDriver(${d.id})">🗑</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterDrivers() {
+  const q = document.getElementById('driverSearch').value.toLowerCase();
+  renderDriversTable(allDrivers.filter(d =>
+    d.driver_name.toLowerCase().includes(q) || d.eld_driver_id.toLowerCase().includes(q)
+  ));
+}
+
+async function loadGroupsForSelects() {
+  try {
+    allGroups = await api('GET', '/api/telegram/groups');
+  } catch(e) { allGroups = []; }
+  const opts = '<option value="">— Guruh tanlanmagan —</option>' +
+    allGroups.map(g => `<option value="${g.chat_id}">${g.title}</option>`).join('');
+  ['newTgGroup','editTgGroup'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+function openAddDriverModal() {
+  loadGroupsForSelects();
+  openModal('addDriverModal');
+}
+
+async function addDriver() {
+  const eld_driver_id = document.getElementById('newEldId').value.trim();
+  const driver_name   = document.getElementById('newDriverName').value.trim();
+  const driver_email  = document.getElementById('newDriverEmail').value.trim();
+  const eld_source    = document.getElementById('newEldSource').value;
+  const chatSel       = document.getElementById('newTgGroup');
+  const telegram_chat_id    = chatSel.value || null;
+  const telegram_chat_title = chatSel.options[chatSel.selectedIndex]?.text || null;
+  if (!eld_driver_id || !driver_name) { toast('ELD ID va Ism majburiy', 'error'); return; }
+  try {
+    await api('POST', '/api/drivers', { eld_driver_id, driver_name, driver_email, eld_source, telegram_chat_id, telegram_chat_title });
+    toast('Driver qo\'shildi ✅', 'success');
+    closeModal('addDriverModal');
+    loadDrivers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function openEditDriver(id, name, chatId) {
+  document.getElementById('editDriverId').value = id;
+  document.getElementById('editDriverName').value = name;
+  loadGroupsForSelects().then(() => {
+    const sel = document.getElementById('editTgGroup');
+    if (chatId && sel) sel.value = chatId;
+  });
+  openModal('editDriverModal');
+}
+
+async function saveDriverEdit() {
+  const id = document.getElementById('editDriverId').value;
+  const driver_name = document.getElementById('editDriverName').value.trim();
+  const chatSel = document.getElementById('editTgGroup');
+  const telegram_chat_id = chatSel.value || null;
+  const telegram_chat_title = chatSel.options[chatSel.selectedIndex]?.text || null;
+  try {
+    await api('PUT', `/api/drivers/${id}`, { driver_name, telegram_chat_id, telegram_chat_title });
+    toast('Yangilandi ✅', 'success');
+    closeModal('editDriverModal');
+    loadDrivers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteDriver(id) {
+  if (!confirm('Bu driverni o\'chirmoqchimisiz?')) return;
+  try {
+    await api('DELETE', `/api/drivers/${id}`);
+    toast('O\'chirildi', 'info');
+    loadDrivers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── ELD Sync ───────────────────────────────────────────────────────────────
+async function openSyncModal() {
+  try {
+    const sources = await api('GET', '/api/eld-sources');
+    const sel = document.getElementById('syncEldSource');
+    sel.innerHTML = sources.map(s => `<option value="${s.id}">${s.display_name}</option>`).join('');
+    openModal('syncModal');
+  } catch(e) { toast('ELD sources yuklanmadi', 'error'); }
+}
+
+async function syncDrivers() {
+  const id = document.getElementById('syncEldSource').value;
+  try {
+    const r = await api('POST', `/api/drivers/sync-from-eld?eld_source_id=${id}`);
+    toast(`Sync: +${r.added} qo'shildi, ${r.updated} yangilandi`, 'success');
+    closeModal('syncModal');
+    loadDrivers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Alerts ─────────────────────────────────────────────────────────────────
+async function loadAlerts() {
+  const container = document.getElementById('alertsList');
+  container.innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+  try {
+    const alerts = await api('GET', '/api/monitor/alerts?limit=200');
+    if (!alerts.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🔔</div><p>Hali alert yo\'q</p></div>';
+      return;
+    }
+    const icons = { cycle_low:'📉', drive_low:'🚗', shift_low:'🕐', break_low:'😴',
+                    document_incomplete:'📄', disconnect:'📡', on_break:'☕', profile_form:'👤' };
+    const colors = { cycle_low:'pill-warn', drive_low:'pill-danger', shift_low:'pill-warn',
+                     break_low:'pill-info', document_incomplete:'pill-danger',
+                     disconnect:'pill-danger', on_break:'pill-info', profile_form:'pill-warn' };
+    container.innerHTML = alerts.map(a => `
+      <div class="alert-row">
+        <span class="alert-icon">${icons[a.alert_type]||'🔔'}</span>
+        <div class="alert-content">
+          <div class="alert-msg">${a.message}</div>
+          <div class="alert-meta">${a.eld_source?.toUpperCase()} · ${a.telegram_chat_id||'guruh yo\'q'} · ${new Date(a.sent_at).toLocaleString('uz-UZ')}</div>
+        </div>
+        <span class="alert-type-badge ${colors[a.alert_type]||'pill-info'}">${a.alert_type}</span>
+      </div>
+    `).join('');
+  } catch(e) { container.innerHTML = '<div class="loading-wrap">Yuklanmadi</div>'; }
+}
+
+async function loadAlertStats() {
+  try {
+    const stats = await api('GET', '/api/monitor/alerts/stats');
+    const grid = document.getElementById('alertStatsGrid');
+    const icons2 = { cycle_low:'📉', drive_low:'🚗', shift_low:'🕐', break_low:'😴',
+                     document_incomplete:'📄', disconnect:'📡', on_break:'☕', profile_form:'👤' };
+    const statColors = ['var(--accent3)','var(--accent4)','var(--accent2)','var(--accent5)',
+                        'var(--accent)','#ff9f0a','#5ac8fa','#a8edea'];
+    grid.innerHTML = stats.slice(0,4).map((s,i) => `
+      <div class="stat-card" style="--stat-color:${statColors[i%statColors.length]}">
+        <div class="stat-icon">${icons2[s.alert_type]||'🔔'}</div>
+        <div class="stat-value" style="font-size:24px">${s.count}</div>
+        <div class="stat-label">${s.alert_type.replace(/_/g,' ')}</div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+// ── ELD Sources ────────────────────────────────────────────────────────────
+async function loadEldSources() {
+  const container = document.getElementById('eldSourcesList');
+  try {
+    allSources = await api('GET', '/api/eld-sources');
+    if (!allSources.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><p>ELD manba yo\'q</p></div>';
+      return;
+    }
+    const logos = { factor: '🟢', leader: '🔵', default: '⚫' };
+    container.innerHTML = allSources.map(s => `
+      <div class="eld-card">
+        <div class="eld-logo">${logos[s.name]||logos.default}</div>
+        <div class="eld-info">
+          <h4>${s.display_name}</h4>
+          <small>${s.base_url}</small><br>
+          <small style="color:var(--text3)">Token: ${s.bearer_token_preview}</small>
+          ${s.tenant_id ? `<br><small style="color:var(--text3)">Tenant: ${s.tenant_id}</small>` : ''}
+        </div>
+        <span class="alert-pill ${s.is_active ? 'pill-info' : 'pill-warn'}">${s.is_active ? 'Faol' : 'Nofaol'}</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteEldSource(${s.id})">🗑</button>
+      </div>
+    `).join('');
+  } catch(e) { container.innerHTML = '<div class="loading-wrap">Yuklanmadi</div>'; }
+}
+
+function openAddEldModal() { openModal('addEldModal'); }
+
+async function addEldSource() {
+  const name         = document.getElementById('eldName').value.trim();
+  const display_name = document.getElementById('eldDisplayName').value.trim();
+  const base_url     = document.getElementById('eldBaseUrl').value.trim();
+  const bearer_token = document.getElementById('eldToken').value.trim();
+  const tenant_id    = document.getElementById('eldTenantId').value.trim() || null;
+  if (!name || !base_url || !bearer_token) { toast('Maydonlarni to\'ldiring', 'error'); return; }
+  try {
+    await api('POST', '/api/eld-sources', { name, display_name, base_url, bearer_token, tenant_id });
+    toast('ELD source qo\'shildi ✅', 'success');
+    closeModal('addEldModal');
+    loadEldSources();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteEldSource(id) {
+  if (!confirm('O\'chirishni tasdiqlang')) return;
+  try {
+    await api('DELETE', `/api/eld-sources/${id}`);
+    toast('O\'chirildi', 'info');
+    loadEldSources();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Telegram page ──────────────────────────────────────────────────────────
+async function loadTelegramPage() {
+  await checkTgStatus();
+  const container = document.getElementById('tgContent');
+  if (!tgAuthorized) {
+    renderTelegramAuth(container);
+  } else {
+    await renderTelegramGroups(container);
+  }
+}
+
+function renderTelegramAuth(container) {
+  container.innerHTML = `
+    <div class="card" style="max-width:480px;margin:0 auto">
+      <div class="card-body">
+        <div class="auth-wizard">
+          <div class="tg-logo">✈️</div>
+          <h2>Telegram Ulanish</h2>
+          <p>Sizning Telegram accountingizdan driverlarga xabar yuborish uchun OTP orqali kirish kerak.</p>
+          <div class="auth-step" id="authStep1">
+            <div class="input-group">
+              <label>Telefon raqam</label>
+              <input class="input" id="authPhone" value="+998775013234">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="sendOtp()">📱 SMS Yuborish</button>
+          </div>
+          <div class="auth-step" id="authStep2" style="display:none">
+            <div class="input-group">
+              <label>SMS Kod</label>
+              <input class="input" id="authCode" placeholder="12345" maxlength="6">
+            </div>
+            <div class="input-group">
+              <label>2FA Parol (agar bo'lsa)</label>
+              <input class="input" id="authPass" type="password" placeholder="optional">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="verifyOtp()">✅ Tasdiqlash</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+let _phoneCodeHash = '';
+
+async function sendOtp() {
+  const phone = document.getElementById('authPhone').value.trim();
+  try {
+    const r = await api('POST', '/api/telegram/auth/send-code', { phone });
+    _phoneCodeHash = r.phone_code_hash || '';
+    document.getElementById('authStep1').style.display = 'none';
+    document.getElementById('authStep2').style.display = 'block';
+    toast('SMS kod yuborildi!', 'info');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function verifyOtp() {
+  const phone    = document.getElementById('authPhone').value.trim();
+  const code     = document.getElementById('authCode').value.trim();
+  const password = document.getElementById('authPass').value;
+  try {
+    const r = await api('POST', '/api/telegram/auth/verify', { phone, code, phone_code_hash: _phoneCodeHash, password });
+    toast('Muvaffaqiyatli ulandi! Session saqlandi.', 'success');
+    tgAuthorized = true;
+    await loadTelegramPage();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function renderTelegramGroups(container) {
+  container.innerHTML = '<div class="loading-wrap"><div class="spinner"></div> Guruhlar yuklanmoqda...</div>';
+  try {
+    const groups = await api('GET', '/api/telegram/groups');
+    allGroups = groups;
+    if (!groups.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">💬</div><p>Guruhlar topilmadi. Telegram da guruh a\'zosi bo\'lishingiz kerak.</p></div>';
+      return;
+    }
+    container.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <h3>💬 Telegram Guruhlar (${groups.length})</h3>
+          <button class="btn btn-ghost btn-sm" onclick="syncTgGroups()">🔄 Yangilash</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>GURUH NOMI</th><th>CHAT ID</th><th>TURI</th><th>A'ZOLAR</th></tr>
+            </thead>
+            <tbody>
+              ${groups.map(g => `
+                <tr>
+                  <td><strong>${g.title}</strong></td>
+                  <td style="font-family:monospace;font-size:12px;color:var(--text3)">${g.chat_id}</td>
+                  <td><span class="alert-pill pill-info">${g.chat_type}</span></td>
+                  <td>${g.member_count||'–'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    container.innerHTML = '<div class="loading-wrap">Guruhlar yuklanmadi. Telegram ulanishini tekshiring.</div>';
+  }
+}
+
+async function syncTgGroups() {
+  try {
+    const groups = await api('GET', '/api/telegram/groups');
+    allGroups = groups;
+    toast(`${groups.length} guruh yuklandi`, 'success');
+    if (document.getElementById('page-telegram').classList.contains('active')) {
+      await renderTelegramGroups(document.getElementById('tgContent'));
+    }
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Settings ───────────────────────────────────────────────────────────────
+async function sendTestMsg() {
+  const chat_id = document.getElementById('testChatId').value.trim();
+  const message = document.getElementById('testMsg').value.trim();
+  if (!chat_id || !message) { toast('Chat ID va xabar kiriting', 'error'); return; }
+  try {
+    await api('POST', '/api/telegram/send', { chat_id, message });
+    toast('Xabar yuborildi ✅', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+checkTgStatus();
+refreshAll();
+// Auto-refresh every 5 min
+setInterval(refreshAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
