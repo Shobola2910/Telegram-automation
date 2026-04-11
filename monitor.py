@@ -183,3 +183,29 @@ async def run_monitoring_cycle():
 
     elapsed = (datetime.now(timezone.utc) - start).total_seconds()
     log.info(f"=== Monitoring sikli tugadi ({elapsed:.1f}s, {len(drivers_db)} driver) ===")
+
+async def reload_config():
+    """Settings o'zgarganda factor/leader client tokenlarini yangilash"""
+    import database as db
+    import factor_client
+    import leader_client
+    import asana_client
+
+    settings = await db.get_all_settings()
+
+    if settings.get("factor_token"):
+        factor_client.HEADERS["X-Api-Key"] = settings["factor_token"]
+        log.info("Factor token yangilandi")
+
+    if settings.get("leader_token"):
+        leader_client.HEADERS["Authorization"] = f"Bearer {settings['leader_token']}"
+        log.info("Leader token yangilandi")
+
+    if settings.get("leader_company_id"):
+        import config
+        config.LEADER_COMPANY_ID = settings["leader_company_id"]
+
+    if settings.get("asana_project_id"):
+        import config
+        config.ASANA_PROJECT_ID = settings["asana_project_id"]
+        log.info("Asana project ID yangilandi")

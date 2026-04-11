@@ -111,3 +111,34 @@ async def get_recent_alerts(limit: int = 50):
             ORDER BY a.sent_at DESC LIMIT ?
         """, (limit,)) as cur:
             return [dict(r) for r in await cur.fetchall()]
+
+# ─── Settings (ELD tokens stored in DB) ──────────────────────────────────────
+
+async def init_settings():
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key   TEXT PRIMARY KEY,
+                value TEXT
+            )
+        """)
+        await db.commit()
+
+async def get_setting(key: str) -> str | None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT value FROM settings WHERE key=?", (key,)) as cur:
+            row = await cur.fetchone()
+            return row[0] if row else None
+
+async def set_setting(key: str, value: str):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value)
+        )
+        await db.commit()
+
+async def get_all_settings() -> dict:
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT key, value FROM settings") as cur:
+            return {row[0]: row[1] for row in await cur.fetchall()}
